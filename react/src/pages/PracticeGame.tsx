@@ -329,26 +329,69 @@ const PracticeGame: React.FC = () => {
         )}
       </div>
       
-      <div 
-        className="gap-1 mb-4 border-4 border-gray-600 p-2 bg-gray-800 inline-block"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-          gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`
-        }}
-      >
+      <div className="grid grid-cols-13 gap-1 mb-4 border-4 border-gray-600 p-2 bg-gray-800">
         {Array.from({ length: GRID_SIZE }, (_, y) =>
           Array.from({ length: GRID_SIZE }, (_, x) => renderCell(x, y))
         )}
       </div>
       
+      {/* Mobile/Touch Controls */}
+      <div className="flex flex-col items-center gap-4 mb-4">
+        <div className="grid grid-cols-3 gap-2">
+          <div></div>
+          <button 
+            onClick={() => movePlayer(0, -1)}
+            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+            disabled={gameOver}
+          >
+            ↑
+          </button>
+          <div></div>
+          
+          <button 
+            onClick={() => movePlayer(-1, 0)}
+            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+            disabled={gameOver}
+          >
+            ←
+          </button>
+          <button 
+            onClick={placeBomb}
+            className="w-12 h-12 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-lg flex items-center justify-center text-xl touch-manipulation"
+            disabled={gameOver}
+          >
+            💣
+          </button>
+          <button 
+            onClick={() => movePlayer(1, 0)}
+            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+            disabled={gameOver}
+          >
+            →
+          </button>
+          
+          <div></div>
+          <button 
+            onClick={() => movePlayer(0, 1)}
+            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+            disabled={gameOver}
+          >
+            ↓
+          </button>
+          <div></div>
+        </div>
+        
+        <div className="text-xs text-gray-400 text-center">
+          Touch controls for mobile • Keyboard: Arrow Keys/WASD + Space
+        </div>
+      </div>
+      
       <div className="text-center max-w-md">
-        <h3 className="text-lg font-bold mb-2">Controls:</h3>
+        <h3 className="text-lg font-bold mb-2">How to Play:</h3>
         <div className="text-sm space-y-1">
-          <p>Move: Arrow Keys or WASD</p>
-          <p>Drop Bomb: Space or Enter</p>
-          <p>Destroy boxes (📦) to earn points!</p>
-          <p>Avoid explosions (💥) or you'll lose!</p>
+          <p>🤖 Move around and place bombs 💣</p>
+          <p>📦 Destroy boxes to earn points!</p>
+          <p>💥 Avoid explosions or you'll lose!</p>
         </div>
       </div>
     </div>
