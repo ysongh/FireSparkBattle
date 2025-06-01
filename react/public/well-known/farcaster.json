@@ -1,4 +1,9 @@
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjIxODk1MCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDREYkRkMEZkNTk5MzIzMGQ5ZGIyMzdFRmVCNjI3QjY4OTNDN2QwOTgifQ",
+    "payload": "eyJkb21haW4iOiJmaXJlc3BhcmtiYXR0bGUubmV0bGlmeS5hcHAifQ",
+    "signature": "MHhmZTc4M2I4ZGMwMTYxMzhjNGQwNzBhN2VmYTY5YTljYTUwNjllMTVkYTg1NDQ0NGRmYzZiMjkxM2Y4ODRjZDdkNjVmN2YwMDE0NTM2ZDgwYzcwN2I4ODAyYmE4MjFjOWQ0N2ZjMGM4ZjNlMjI4NzIxYWExZjg4ZTRiYzhiNTU1NjFj"
+  },
   "frame": {
     "version": "1",
     "name": "FireSpark Battle",
