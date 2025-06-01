@@ -19,24 +19,37 @@ interface Explosion {
   timer: number;
 }
 
-type CellType = 'empty' | 'wall' | 'destructible' | 'player' | 'bomb' | 'explosion';
+interface Enemy {
+  id: number;
+  x: number;
+  y: number;
+  direction: number; // 0: up, 1: right, 2: down, 3: left
+  lastMoveTime: number;
+}
+
+type CellType = 'empty' | 'wall' | 'destructible' | 'player' | 'bomb' | 'explosion' | 'enemy';
 
 const GRID_SIZE = 13;
 const BOMB_TIMER = 3000; // 3 seconds
 const EXPLOSION_TIMER = 500; // 0.5 seconds
 const EXPLOSION_RANGE = 2;
+const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
+const INITIAL_ENEMY_COUNT = 3;
 
 const PracticeGame: React.FC = () => {
   const [playerPos, setPlayerPos] = useState<Position>({ x: 1, y: 1 });
   const [bombs, setBombs] = useState<Bomb[]>([]);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
+  const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [destructibleWalls, setDestructibleWalls] = useState<Set<string>>(new Set());
   const [gameGrid, setGameGrid] = useState<CellType[][]>([]);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
   
   const bombIdRef = useRef(0);
   const explosionIdRef = useRef(0);
+  const enemyIdRef = useRef(0);
 
   // Initialize game grid
   const initializeGrid = useCallback(() => {
@@ -72,11 +85,47 @@ const PracticeGame: React.FC = () => {
 
     setGameGrid(grid);
     setDestructibleWalls(destructible);
+    
+    // Initialize enemies in random positions
+    const initialEnemies: Enemy[] = [];
+    const enemyPositions = new Set<string>();
+    
+    for (let i = 0; i < INITIAL_ENEMY_COUNT; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      
+      do {
+        x = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+        y = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+        attempts++;
+        
+        // Avoid infinite loops
+        if (attempts > 100) break;
+      } while (
+        grid[y][x] !== 'empty' || 
+        enemyPositions.has(`${x},${y}`) ||
+        // Keep enemies away from player start area
+        (x <= 3 && y <= 3)
+      );
+      
+      if (attempts <= 100) {
+        initialEnemies.push({
+          id: enemyIdRef.current++,
+          x,
+          y,
+          direction: Math.floor(Math.random() * 4),
+          lastMoveTime: Date.now()
+        });
+        enemyPositions.add(`${x},${y}`);
+      }
+    }
+    
+    setEnemies(initialEnemies);
   }, []);
 
   // Handle player movement
   const movePlayer = useCallback((dx: number, dy: number) => {
-    if (gameOver) return;
+    if (gameOver || gameWon) return;
     
     setPlayerPos(prev => {
       const newX = prev.x + dx;
@@ -97,13 +146,20 @@ const PracticeGame: React.FC = () => {
         return prev;
       }
       
+      // Check if moving into an enemy
+      const enemyAtPos = enemies.find(enemy => enemy.x === newX && enemy.y === newY);
+      if (enemyAtPos) {
+        setGameOver(true);
+        return prev;
+      }
+      
       return { x: newX, y: newY };
     });
-  }, [gameGrid, bombs, gameOver]);
+  }, [gameGrid, bombs, enemies, gameOver, gameWon]);
 
   // Place bomb
   const placeBomb = useCallback(() => {
-    if (gameOver) return;
+    if (gameOver || gameWon) return;
     
     const existingBomb = bombs.find(bomb => bomb.x === playerPos.x && bomb.y === playerPos.y);
     if (existingBomb) return;
@@ -116,7 +172,7 @@ const PracticeGame: React.FC = () => {
     };
     
     setBombs(prev => [...prev, newBomb]);
-  }, [playerPos, bombs, gameOver]);
+  }, [playerPos, bombs, gameOver, gameWon]);
 
   // Create explosion
   const createExplosion = useCallback((bombX: number, bombY: number) => {
@@ -152,19 +208,112 @@ const PracticeGame: React.FC = () => {
     });
     
     setExplosions(prev => [...prev, ...newExplosions]);
+    
+    // Check if enemies are hit by explosion
+    setEnemies(prev => prev.filter(enemy => {
+      const enemyHit = newExplosions.some(explosion => 
+        explosion.x === enemy.x && explosion.y === enemy.y
+      );
+      if (enemyHit) {
+        setScore(prevScore => prevScore + 50);
+        return false;
+      }
+      return true;
+    }));
   }, [gameGrid]);
 
-  // Check if player is hit by explosion
+  // Move enemies with simple AI
+  const moveEnemies = useCallback(() => {
+    if (gameOver || gameWon) return;
+    
+    const currentTime = Date.now();
+    
+    setEnemies(prev => prev.map(enemy => {
+      if (currentTime - enemy.lastMoveTime < ENEMY_MOVE_INTERVAL) {
+        return enemy;
+      }
+      
+      const directions = [
+        { dx: 0, dy: -1 }, // up
+        { dx: 1, dy: 0 },  // right
+        { dx: 0, dy: 1 },  // down
+        { dx: -1, dy: 0 }  // left
+      ];
+      
+      // Try to move in current direction first
+      let newX = enemy.x + directions[enemy.direction].dx;
+      let newY = enemy.y + directions[enemy.direction].dy;
+      let newDirection = enemy.direction;
+      
+      // Check if current direction is blocked
+      const canMoveInCurrentDirection = 
+        newX >= 1 && newX < GRID_SIZE - 1 &&
+        newY >= 1 && newY < GRID_SIZE - 1 &&
+        gameGrid[newY][newX] === 'empty' &&
+        !bombs.some(bomb => bomb.x === newX && bomb.y === newY) &&
+        !prev.some(otherEnemy => otherEnemy.id !== enemy.id && otherEnemy.x === newX && otherEnemy.y === newY);
+      
+      // If blocked, try other directions
+      if (!canMoveInCurrentDirection) {
+        const availableDirections = directions
+          .map((dir, index) => ({
+            index,
+            x: enemy.x + dir.dx,
+            y: enemy.y + dir.dy
+          }))
+          .filter(pos => 
+            pos.x >= 1 && pos.x < GRID_SIZE - 1 &&
+            pos.y >= 1 && pos.y < GRID_SIZE - 1 &&
+            gameGrid[pos.y][pos.x] === 'empty' &&
+            !bombs.some(bomb => bomb.x === pos.x && bomb.y === pos.y) &&
+            !prev.some(otherEnemy => otherEnemy.id !== enemy.id && otherEnemy.x === pos.x && otherEnemy.y === pos.y)
+          );
+        
+        if (availableDirections.length > 0) {
+          const randomDirection = availableDirections[Math.floor(Math.random() * availableDirections.length)];
+          newX = randomDirection.x;
+          newY = randomDirection.y;
+          newDirection = randomDirection.index;
+        } else {
+          // No valid moves, stay in place but change direction
+          newX = enemy.x;
+          newY = enemy.y;
+          newDirection = Math.floor(Math.random() * 4);
+        }
+      }
+      
+      return {
+        ...enemy,
+        x: newX,
+        y: newY,
+        direction: newDirection,
+        lastMoveTime: currentTime
+      };
+    }));
+  }, [gameGrid, bombs, gameOver, gameWon]);
+  // Check if player is hit by explosion or touches enemy
   const checkPlayerHit = useCallback(() => {
-    const playerHit = explosions.some(explosion => 
+    // Check explosion collision
+    const playerHitByExplosion = explosions.some(explosion => 
       explosion.x === playerPos.x && explosion.y === playerPos.y
     );
     
-    if (playerHit) {
+    // Check enemy collision
+    const playerHitByEnemy = enemies.some(enemy =>
+      enemy.x === playerPos.x && enemy.y === playerPos.y
+    );
+    
+    if (playerHitByExplosion || playerHitByEnemy) {
       setGameOver(true);
     }
-  }, [explosions, playerPos]);
+  }, [explosions, enemies, playerPos]);
 
+  // Check win condition
+  const checkWinCondition = useCallback(() => {
+    if (enemies.length === 0 && !gameOver) {
+      setGameWon(true);
+    }
+  }, [enemies, gameOver]);
   // Update game grid with current state
   useEffect(() => {
     if (gameGrid.length === 0) return;
@@ -189,7 +338,7 @@ const PracticeGame: React.FC = () => {
     setGameGrid(newGrid);
   }, [destructibleWalls]);
 
-  // Game loop for timers
+  // Game loop for timers and enemy movement
   useEffect(() => {
     const interval = setInterval(() => {
       // Update bomb timers
@@ -209,15 +358,23 @@ const PracticeGame: React.FC = () => {
         prev.map(explosion => ({ ...explosion, timer: explosion.timer - 100 }))
             .filter(explosion => explosion.timer > 0)
       );
+      
+      // Move enemies
+      moveEnemies();
     }, 100);
     
     return () => clearInterval(interval);
-  }, [createExplosion]);
+  }, [createExplosion, moveEnemies]);
 
-  // Check for player collision with explosions
+  // Check for player collision with explosions and enemies
   useEffect(() => {
     checkPlayerHit();
   }, [checkPlayerHit]);
+  
+  // Check win condition
+  useEffect(() => {
+    checkWinCondition();
+  }, [checkWinCondition]);
 
   // Keyboard controls
   useEffect(() => {
@@ -265,8 +422,13 @@ const PracticeGame: React.FC = () => {
     setPlayerPos({ x: 1, y: 1 });
     setBombs([]);
     setExplosions([]);
+    setEnemies([]);
     setScore(0);
     setGameOver(false);
+    setGameWon(false);
+    bombIdRef.current = 0;
+    explosionIdRef.current = 0;
+    enemyIdRef.current = 0;
     initializeGrid();
   };
 
@@ -275,6 +437,7 @@ const PracticeGame: React.FC = () => {
     const isPlayer = playerPos.x === x && playerPos.y === y;
     const bomb = bombs.find(b => b.x === x && b.y === y);
     const explosion = explosions.find(e => e.x === x && e.y === y);
+    const enemy = enemies.find(e => e.x === x && e.y === y);
     const cellType = gameGrid[y]?.[x];
     
     let cellClass = "w-8 h-8 flex items-center justify-center text-sm font-bold ";
@@ -289,6 +452,9 @@ const PracticeGame: React.FC = () => {
     } else if (isPlayer) {
       cellClass += "bg-blue-400";
       content = "🤖";
+    } else if (enemy) {
+      cellClass += "bg-purple-400 animate-pulse";
+      content = "👾";
     } else {
       switch (cellType) {
         case 'wall':
@@ -316,7 +482,19 @@ const PracticeGame: React.FC = () => {
       
       <div className="mb-4 flex gap-4 items-center">
         <span className="text-lg">Score: {score}</span>
-        {gameOver && (
+        <span className="text-lg">Enemies: {enemies.length}</span>
+        {gameWon && (
+          <div className="flex items-center gap-2">
+            <span className="text-green-400 font-bold">You Win! 🎉</span>
+            <button 
+              onClick={resetGame}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded"
+            >
+              Play Again
+            </button>
+          </div>
+        )}
+        {gameOver && !gameWon && (
           <div className="flex items-center gap-2">
             <span className="text-red-400 font-bold">Game Over!</span>
             <button 
@@ -334,7 +512,7 @@ const PracticeGame: React.FC = () => {
           Array.from({ length: GRID_SIZE }, (_, x) => renderCell(x, y))
         )}
       </div>
-      
+
       {/* Mobile/Touch Controls */}
       <div className="flex flex-col items-center gap-4 mb-4">
         <div className="grid grid-cols-3 gap-2">
@@ -389,9 +567,10 @@ const PracticeGame: React.FC = () => {
       <div className="text-center max-w-md">
         <h3 className="text-lg font-bold mb-2">How to Play:</h3>
         <div className="text-sm space-y-1">
-          <p>🤖 Move around and place bombs 💣</p>
-          <p>📦 Destroy boxes to earn points!</p>
-          <p>💥 Avoid explosions or you'll lose!</p>
+          <p>Move: Arrow Keys or WASD</p>
+          <p>Drop Firework: Space or Enter</p>
+          <p>Destroy boxes (📦) to earn points!</p>
+          <p>Avoid explosions (💥) or you'll lose!</p>
         </div>
       </div>
     </div>
