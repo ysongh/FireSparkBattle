@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAccount, useConnect, useSignMessage } from "wagmi";
 
 import PracticeGame from "./pages/PracticeGame";
+import MultiplayerGame from "./pages/MultiplayerGame";
 
 function App() {
   useEffect(() => {
@@ -13,7 +14,7 @@ function App() {
     <>
       <div>Mini App + Vite + TS + React + Wagmi</div>
       <ConnectMenu />
-      <PracticeGame />
+      <MultiplayerGame />
     </>
   );
 }
