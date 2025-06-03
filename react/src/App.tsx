@@ -1,9 +1,9 @@
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
+import { HashRouter, Route, Routes } from "react-router-dom";
 
 import PracticeGame from "./pages/PracticeGame";
 import MultiplayerGame from "./pages/MultiplayerGame";
-import { ConnectMenu } from "./components/ConnectMenu";
 
 function App() {
   useEffect(() => {
@@ -11,11 +11,16 @@ function App() {
   }, []);
 
   return (
-    <>
-      <div>Mini App + Vite + TS + React + Wagmi</div>
-      <ConnectMenu />
-      <MultiplayerGame />
-    </>
+    <HashRouter>
+      <Routes>
+        <Route
+          path="/practice"
+          element={<PracticeGame />} />
+        <Route
+          path="/"
+          element={<MultiplayerGame />} />
+      </Routes>
+    </HashRouter>
   );
 }
 
