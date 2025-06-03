@@ -259,7 +259,7 @@ const MultiplayerGame: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
         <div className="bg-gray-800 p-8 rounded-lg max-w-md w-full">
-          <h1 className="text-3xl font-bold mb-6 text-center text-yellow-400">💣 Multiplayer Bomberman</h1>
+          <h1 className="text-3xl font-bold mb-6 text-center text-yellow-400">💣 Multiplayer Fire Spark</h1>
           
           <div className="space-y-4">
             <div>
