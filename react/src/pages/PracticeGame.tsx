@@ -440,7 +440,7 @@ const PracticeGame: React.FC = () => {
     const enemy = enemies.find(e => e.x === x && e.y === y);
     const cellType = gameGrid[y]?.[x];
     
-    let cellClass = "w-8 h-8 flex items-center justify-center text-sm font-bold ";
+    let cellClass = "w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-bold ";
     let content = "";
     
     if (explosion) {
@@ -507,7 +507,7 @@ const PracticeGame: React.FC = () => {
         )}
       </div>
       
-      <div className="grid grid-cols-13 gap-1 mb-4 border-4 border-gray-600 p-2 bg-gray-800">
+      <div className="grid grid-cols-13 gap-1 mb-4 border-4 border-gray-600 bg-gray-800">
         {Array.from({ length: GRID_SIZE }, (_, y) =>
           Array.from({ length: GRID_SIZE }, (_, x) => renderCell(x, y))
         )}
