@@ -514,54 +514,60 @@ const PracticeGame: React.FC = () => {
       </div>
 
       {/* Mobile/Touch Controls */}
-      <div className="flex flex-col items-center gap-4 mb-4">
-        <div className="grid grid-cols-3 gap-2">
-          <div></div>
-          <button 
-            onClick={() => movePlayer(0, -1)}
-            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
-            disabled={gameOver}
-          >
-            ↑
-          </button>
-          <div></div>
-          
-          <button 
-            onClick={() => movePlayer(-1, 0)}
-            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
-            disabled={gameOver}
-          >
-            ←
-          </button>
+      <div className="flex">
+        <div className="flex flex-col items-center gap-4 mb-4">
+          <div className="grid grid-cols-3 gap-2">
+            <div></div>
+            <button 
+              onClick={() => movePlayer(0, -1)}
+              className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+              disabled={gameOver}
+            >
+              ↑
+            </button>
+            <div></div>
+            
+            <button 
+              onClick={() => movePlayer(-1, 0)}
+              className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+              disabled={gameOver}
+            >
+              ←
+            </button>
+            <div></div>
+            <button 
+              onClick={() => movePlayer(1, 0)}
+              className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+              disabled={gameOver}
+            >
+              →
+            </button>
+            
+            <div></div>
+            <button 
+              onClick={() => movePlayer(0, 1)}
+              className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
+              disabled={gameOver}
+            >
+              ↓
+            </button>
+            <div></div>
+          </div>
+        </div>
+
+        <div className="mt-[45px] ml-[50px]">
           <button 
             onClick={placeBomb}
-            className="w-12 h-12 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-lg flex items-center justify-center text-xl touch-manipulation"
+            className="w-20 h-20 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-lg flex items-center justify-center text-xl touch-manipulation"
             disabled={gameOver}
           >
             💣
           </button>
-          <button 
-            onClick={() => movePlayer(1, 0)}
-            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
-            disabled={gameOver}
-          >
-            →
-          </button>
-          
-          <div></div>
-          <button 
-            onClick={() => movePlayer(0, 1)}
-            className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
-            disabled={gameOver}
-          >
-            ↓
-          </button>
-          <div></div>
         </div>
-        
-        <div className="text-xs text-gray-400 text-center">
-          Touch controls for mobile • Keyboard: Arrow Keys/WASD + Space
-        </div>
+      </div>
+
+      <div className="text-xs text-gray-400 text-center">
+        Touch controls for mobile • Keyboard: Arrow Keys/WASD + Space
       </div>
       
       <div className="text-center max-w-md">
