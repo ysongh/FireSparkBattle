@@ -1,10 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-
-interface Position {
-  x: number;
-  y: number;
-}
 
 interface Player {
   id: string;
@@ -44,7 +39,6 @@ interface GameState {
 type CellType = 'empty' | 'wall' | 'destructible';
 
 const GRID_SIZE = 13;
-const PLAYER_COLORS = ['🔴', '🔵', '🟢', '🟡'];
 
 const MultiplayerGame: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -65,13 +59,12 @@ const MultiplayerGame: React.FC = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    // Replace with your server URL
-    const newSocket = io('http://localhost:3001');
+    const newSocket = io(import.meta.env.VITE_SERVER_URL);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
       setConnected(true);
-      setPlayerId(newSocket.id);
+      setPlayerId(newSocket.id || '');
     });
 
     newSocket.on('disconnect', () => {
