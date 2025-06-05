@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { CircleHelp } from "lucide-react";
 import { sdk } from "@farcaster/frame-sdk";
+
+import { HowToPlayPopup } from '../components/HowToPlayPopup';
 
 interface Position {
   x: number;
@@ -47,6 +50,7 @@ const PracticeGame: React.FC = () => {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
   
   const bombIdRef = useRef(0);
   const explosionIdRef = useRef(0);
@@ -491,8 +495,16 @@ const PracticeGame: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center p-4 bg-gray-900 min-h-screen text-white">
-      <h1 className="text-3xl font-bold mb-4 text-yellow-400">Fire Spark Battle</h1>
-      
+      <div className="flex mb-2">
+        <h1 className="text-3xl font-bold text-yellow-400 mr-3">Fire Spark Battle</h1>
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="px-1 bg-yellow-600 hover:bg-yellow-700 rounded"
+        >
+          <CircleHelp className="h-7 w-7" />
+        </button>
+      </div>
+     
       <div className="mb-4 flex gap-4 items-center">
         <span className="text-lg">Score: {score}</span>
         <span className="text-lg">Enemies: {enemies.length}</span>
@@ -578,20 +590,24 @@ const PracticeGame: React.FC = () => {
           </button>
         </div>
       </div>
-
-      <div className="text-xs text-gray-400 text-center">
-        Touch controls for mobile • Keyboard: Arrow Keys/WASD + Space
-      </div>
       
-      <div className="text-center max-w-md">
-        <h3 className="text-lg font-bold mb-2">How to Play:</h3>
+      <HowToPlayPopup isOpen={isOpen} onClose={() => setIsOpen(false)} title="How to Play:">
         <div className="text-sm space-y-1">
           <p>Move: Arrow Keys or WASD</p>
           <p>Drop Firework: Space or Enter</p>
           <p>Destroy boxes (📦) to earn points!</p>
           <p>Avoid explosions (💥) or you'll lose!</p>
         </div>
-      </div>
+
+        <div className="flex justify-end">
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-2 bg-red-400 hover:bg-red-600 rounded"
+          >
+            Close
+          </button>
+        </div>
+      </HowToPlayPopup>
     </div>
   );
 };
