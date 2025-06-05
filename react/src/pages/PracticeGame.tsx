@@ -159,10 +159,10 @@ const PracticeGame: React.FC = () => {
 
   // Place bomb
   const placeBomb = useCallback(() => {
-    if (gameOver || gameWon) return;
+    if (gameOver) return;
     
-    const existingBomb = bombs.find(bomb => bomb.x === playerPos.x && bomb.y === playerPos.y);
-    if (existingBomb) return;
+    // Limit to only one bomb at a time
+    if (bombs.length > 0) return;
     
     const newBomb: Bomb = {
       id: bombIdRef.current++,
@@ -172,7 +172,7 @@ const PracticeGame: React.FC = () => {
     };
     
     setBombs(prev => [...prev, newBomb]);
-  }, [playerPos, bombs, gameOver, gameWon]);
+  }, [playerPos, bombs, gameOver]);
 
   // Create explosion
   const createExplosion = useCallback((bombX: number, bombY: number) => {
