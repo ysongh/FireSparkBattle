@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { sdk } from "@farcaster/frame-sdk";
 
 interface Position {
   x: number;
@@ -417,6 +418,18 @@ const PracticeGame: React.FC = () => {
     initializeGrid();
   }, [initializeGrid]);
 
+  const handleButtonPress = async (x: number, y: number) => {
+    // @ts-ignore
+    await sdk.haptics.impactOccurred('light');
+    movePlayer(x, y);
+  }
+
+  const handleFireworkPress = async () => {
+    // @ts-ignore
+    await sdk.haptics.impactOccurred('heavy');
+    placeBomb();
+  }
+
   // Reset game
   const resetGame = () => {
     setPlayerPos({ x: 1, y: 1 });
@@ -519,7 +532,7 @@ const PracticeGame: React.FC = () => {
           <div className="grid grid-cols-3 gap-2">
             <div></div>
             <button 
-              onClick={() => movePlayer(0, -1)}
+              onClick={() => handleButtonPress(0, -1)}
               className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
               disabled={gameOver}
             >
@@ -528,7 +541,7 @@ const PracticeGame: React.FC = () => {
             <div></div>
             
             <button 
-              onClick={() => movePlayer(-1, 0)}
+              onClick={() => handleButtonPress(-1, 0)}
               className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
               disabled={gameOver}
             >
@@ -536,7 +549,7 @@ const PracticeGame: React.FC = () => {
             </button>
             <div></div>
             <button 
-              onClick={() => movePlayer(1, 0)}
+              onClick={() => handleButtonPress(1, 0)}
               className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
               disabled={gameOver}
             >
@@ -545,7 +558,7 @@ const PracticeGame: React.FC = () => {
             
             <div></div>
             <button 
-              onClick={() => movePlayer(0, 1)}
+              onClick={() => handleButtonPress(0, 1)}
               className="w-12 h-12 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg flex items-center justify-center text-xl font-bold touch-manipulation"
               disabled={gameOver}
             >
@@ -557,7 +570,7 @@ const PracticeGame: React.FC = () => {
 
         <div className="mt-[45px] ml-[50px]">
           <button 
-            onClick={placeBomb}
+            onClick={handleFireworkPress}
             className="w-20 h-20 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-lg flex items-center justify-center text-xl touch-manipulation"
             disabled={gameOver}
           >
