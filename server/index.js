@@ -81,7 +81,7 @@ function initializeGrid() {
 }
 
 // Create explosion
-function createExplosion(room, bombX, bombY) {
+function createExplosion(room, bombX, bombY, bombPlayerId) {
   const explosions = [];
   const directions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
   
@@ -114,6 +114,11 @@ function createExplosion(room, bombX, bombY) {
   
   room.gameState.explosions.push(...explosions);
   
+  // Decrease bomb count for the player who placed the bomb
+  if (bombPlayerId && room.gameState.players[bombPlayerId]) {
+    room.gameState.players[bombPlayerId].bombCount = Math.max(0, room.gameState.players[bombPlayerId].bombCount - 1);
+  }
+  
   // Check for player hits
   explosions.forEach(explosion => {
     Object.values(room.gameState.players).forEach(player => {
@@ -134,7 +139,7 @@ function createExplosion(room, bombX, bombY) {
   }
 }
 
-// Game update loop for each room
+// Game update loop for each room  
 function startGameLoop(roomCode) {
   const room = rooms.get(roomCode);
   if (!room || room.gameLoop) return;
@@ -150,7 +155,7 @@ function startGameLoop(roomCode) {
     room.gameState.bombs = room.gameState.bombs.filter(bomb => {
       bomb.timer -= 100;
       if (bomb.timer <= 0) {
-        createExplosion(room, bomb.x, bomb.y);
+        createExplosion(room, bomb.x, bomb.y, bomb.playerId);
         return false;
       }
       return true;
@@ -208,7 +213,8 @@ io.on('connection', (socket) => {
       y: SPAWN_POSITIONS[0].y,
       alive: true,
       color: PLAYER_COLORS[0],
-      score: 0
+      score: 0,
+      bombCount: 0  // Track how many bombs this player has placed
     };
     
     room.players.set(socket.id, player);
@@ -256,7 +262,8 @@ io.on('connection', (socket) => {
       y: SPAWN_POSITIONS[playerIndex].y,
       alive: true,
       color: PLAYER_COLORS[playerIndex],
-      score: 0
+      score: 0,
+      bombCount: 0  // Track how many bombs this player has placed
     };
     
     room.players.set(socket.id, player);
@@ -302,6 +309,7 @@ io.on('connection', (socket) => {
     room.players.forEach((player, playerId) => {
       player.alive = true;
       player.score = 0;
+      player.bombCount = 0;  // Reset bomb count when game starts
     });
     
     io.to(roomCode).emit('gameState', {
@@ -375,6 +383,11 @@ io.on('connection', (socket) => {
     const player = room.gameState.players[socket.id];
     if (!player || !player.alive) return;
     
+    // Check if player already has a bomb placed (limit to 1 bomb per player)
+    if (player.bombCount >= 1) {
+      return; // Player can't place more bombs until their current bomb explodes
+    }
+    
     // Check if bomb already exists at position
     const existingBomb = room.gameState.bombs.find(bomb => bomb.x === player.x && bomb.y === player.y);
     if (existingBomb) return;
@@ -388,6 +401,7 @@ io.on('connection', (socket) => {
     };
     
     room.gameState.bombs.push(bomb);
+    player.bombCount++; // Increment bomb count for this player
     
     io.to(roomCode).emit('gameState', {
       players: room.gameState.players,
@@ -426,6 +440,7 @@ io.on('connection', (socket) => {
       player.y = SPAWN_POSITIONS[playerIndex].y;
       player.alive = true;
       player.score = 0;
+      player.bombCount = 0; // Reset bomb count
       room.gameState.players[playerId] = player;
       playerIndex++;
     });
