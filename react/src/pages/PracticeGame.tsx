@@ -48,7 +48,7 @@ const PracticeGame: React.FC = () => {
   const [destructibleWalls, setDestructibleWalls] = useState<Set<string>>(new Set());
   const [gameGrid, setGameGrid] = useState<CellType[][]>([]);
   const [score, setScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+  const [gameOver, setGameOver] = useState(true);
   const [gameWon, setGameWon] = useState(false);
   const [isOpen, setIsOpen] = useState(false)
   
@@ -529,28 +529,6 @@ const PracticeGame: React.FC = () => {
       <div className="mb-2 flex gap-4 items-center">
         <span className="text-lg">Score: {score}</span>
         <span className="text-lg">Enemies: {enemies.length}</span>
-        {gameWon && (
-          <div className="flex items-center gap-2">
-            <span className="text-green-400 font-bold">You Win! 🎉</span>
-            <button 
-              onClick={resetGame}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded"
-            >
-              Play Again
-            </button>
-          </div>
-        )}
-        {gameOver && !gameWon && (
-          <div className="flex items-center gap-2">
-            <span className="text-red-400 font-bold">Game Over!</span>
-            <button 
-              onClick={resetGame}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
-            >
-              Restart
-            </button>
-          </div>
-        )}
       </div>
 
       {gameOver && !gameWon && (
@@ -569,7 +547,7 @@ const PracticeGame: React.FC = () => {
       </div>
 
       {/* Mobile/Touch Controls */}
-      <div className="flex">
+      {!gameOver && !gameWon && <div className="flex">
         <div className="flex flex-col items-center gap-4 mb-4">
           <div className="grid grid-cols-3 gap-2">
             <div></div>
@@ -619,7 +597,30 @@ const PracticeGame: React.FC = () => {
             🧨
           </button>
         </div>
-      </div>
+      </div>}
+
+      {gameWon && (
+        <div className="flex items-center gap-2">
+          <span className="text-green-400 font-bold">You Win! 🎉</span>
+          <button 
+            onClick={resetGame}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded"
+          >
+            Play Again
+          </button>
+        </div>
+      )}
+      {gameOver && !gameWon && (
+        <div className="flex items-center gap-2">
+          <span className="text-red-400 font-bold">Game Over!</span>
+          <button 
+            onClick={resetGame}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
+          >
+            Restart
+          </button>
+        </div>
+      )}
       
       <HowToPlayPopup isOpen={isOpen} onClose={() => setIsOpen(false)} title="How to Play:">
         <div className="text-sm space-y-1">
