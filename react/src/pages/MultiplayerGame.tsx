@@ -220,8 +220,8 @@ const MultiplayerGame: React.FC = () => {
       cellClass += "bg-orange-400 animate-pulse";
       content = "💥";
     } else if (bomb) {
-      cellClass += "bg-red-500 animate-bounce";
-      content = "💣";
+      cellClass += "bg-yellow-500 animate-bounce";
+      content = "🧨";
     } else if (playersAtPos.length > 0) {
       const player = playersAtPos[0];
       cellClass += player.id === playerId ? "bg-blue-400" : "bg-purple-400";

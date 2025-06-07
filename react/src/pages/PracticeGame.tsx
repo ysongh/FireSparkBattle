@@ -485,8 +485,8 @@ const PracticeGame: React.FC = () => {
       cellClass += "bg-orange-400 animate-pulse";
       content = "💥";
     } else if (bomb) {
-      cellClass += "bg-red-500 animate-bounce";
-      content = "💣";
+      cellClass += "bg-yellow-500 animate-bounce";
+      content = "🧨";
     } else if (isPlayer) {
       cellClass += "bg-blue-400";
       content = "🤖";
@@ -613,10 +613,10 @@ const PracticeGame: React.FC = () => {
         <div className="mt-[45px] ml-[50px]">
           <button 
             onClick={handleFireworkPress}
-            className="w-20 h-20 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-lg flex items-center justify-center text-xl touch-manipulation select-none"
+            className="w-20 h-20 bg-yellow-400 hover:bg-yellow-700 active:bg-yellow-600 rounded-lg flex items-center justify-center text-xl touch-manipulation select-none"
             disabled={gameOver}
           >
-            💣
+            🧨
           </button>
         </div>
       </div>
