@@ -50,7 +50,8 @@ const PracticeGame: React.FC = () => {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(true);
   const [gameWon, setGameWon] = useState(false);
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
   
   const bombIdRef = useRef(0);
   const explosionIdRef = useRef(0);
@@ -610,7 +611,17 @@ const PracticeGame: React.FC = () => {
           </button>
         </div>
       )}
-      {gameOver && !gameWon && (
+      {!isStarted ? (
+        <button 
+          onClick={() => {
+            setIsStarted(true);
+            resetGame();
+          }}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
+        >
+          Start
+        </button>
+      ) : gameOver && !gameWon && (
         <div className="flex items-center gap-2">
           <span className="text-red-400 font-bold">Game Over!</span>
           <button 

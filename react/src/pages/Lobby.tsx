@@ -42,7 +42,7 @@ function Lobby() {
                       rounded-xl text-xl font-bold transform hover:scale-105 transition-all duration-200 
                       shadow-lg hover:shadow-xl border-2 border-purple-400/50 hover:border-purple-300"
         >
-          ⚙️ Settings
+          How to Play
         </button>
       </div>
       
