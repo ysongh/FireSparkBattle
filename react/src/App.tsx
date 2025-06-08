@@ -5,6 +5,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import Lobby from "./pages/Lobby";
 import PracticeGame from "./pages/PracticeGame";
 import MultiplayerGame from "./pages/MultiplayerGame";
+import HowToPlay from "./pages/HowToPlay";
 
 function App() {
   useEffect(() => {
@@ -14,6 +15,9 @@ function App() {
   return (
     <HashRouter>
       <Routes>
+        <Route
+          path="/howtoplay"
+          element={<HowToPlay />} />
         <Route
           path="/practice"
           element={<PracticeGame />} />

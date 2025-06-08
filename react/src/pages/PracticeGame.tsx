@@ -624,7 +624,25 @@ const PracticeGame: React.FC = () => {
       
       <HowToPlayPopup isOpen={isOpen} onClose={() => setIsOpen(false)} title="How to Play:">
         <div className="text-sm space-y-1">
-          <p>Move: Arrow Keys or WASD</p>
+          <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center">
+            🎮 Controls
+          </h3>
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center gap-3">
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">↑↓←→</span>
+              <span>or</span>
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">WASD</span>
+              <span>Move Player</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Firework Button</span>
+              <span>or</span>
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Space</span>
+              <span>or</span>
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Enter</span>
+              <span>Drop Fireworks</span>
+            </div>
+          </div>
           <p>Drop Firework: Space or Enter</p>
           <p>Destroy boxes (📦) to earn points!</p>
           <p>Avoid explosions (💥) or you'll lose!</p>

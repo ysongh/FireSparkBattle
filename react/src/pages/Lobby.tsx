@@ -7,7 +7,7 @@ function Lobby() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
       <div className="text-center mb-12">
         <h1 className="text-6xl font-bold mb-4 text-yellow-400 drop-shadow-lg animate-pulse">
-          💣 Fire Spark Battle
+          🧨 Fire Spark Battle
         </h1>
         <p className="text-xl text-gray-300 mb-8">
           Choose your game mode and start Sparking!
@@ -37,7 +37,7 @@ function Lobby() {
         
         {/* Settings Button */}
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/howtoplay")}
           className="w-full py-4 px-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 
                       rounded-xl text-xl font-bold transform hover:scale-105 transition-all duration-200 
                       shadow-lg hover:shadow-xl border-2 border-purple-400/50 hover:border-purple-300"
