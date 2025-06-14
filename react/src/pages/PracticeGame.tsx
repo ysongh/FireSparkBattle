@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from "react-router-dom";
 import { CircleHelp } from "lucide-react";
 import { sdk } from "@farcaster/frame-sdk";
 
@@ -41,6 +42,8 @@ const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
 const INITIAL_ENEMY_COUNT = 3;
 
 const PracticeGame: React.FC = () => {
+  const navigate = useNavigate();
+
   const [playerPos, setPlayerPos] = useState<Position>({ x: 1, y: 1 });
   const [bombs, setBombs] = useState<Bomb[]>([]);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
@@ -629,6 +632,12 @@ const PracticeGame: React.FC = () => {
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
           >
             Restart
+          </button>
+          <button 
+            onClick={() => navigate("/")}
+            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded"
+          >
+            Go Back
           </button>
         </div>
       )}
