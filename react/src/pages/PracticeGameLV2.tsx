@@ -24,21 +24,34 @@ interface Explosion {
   timer: number;
 }
 
+interface LaserBeam {
+  id: number;
+  x: number;
+  y: number;
+  direction: number; // 0: up, 1: right, 2: down, 3: left
+  timer: number;
+  enemyId: number;
+}
+
 interface Enemy {
   id: number;
   x: number;
   y: number;
   direction: number; // 0: up, 1: right, 2: down, 3: left
   lastMoveTime: number;
+  lastShootTime: number;
 }
 
-type CellType = 'empty' | 'wall' | 'destructible' | 'player' | 'bomb' | 'explosion' | 'enemy';
+type CellType = 'empty' | 'wall' | 'destructible' | 'player' | 'bomb' | 'explosion' | 'enemy' | 'laser';
 
 const GRID_SIZE = 13;
 const BOMB_TIMER = 3000; // 3 seconds
 const EXPLOSION_TIMER = 500; // 0.5 seconds
 const EXPLOSION_RANGE = 2;
 const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
+const ENEMY_SHOOT_INTERVAL = 2000; // Enemy shoots every 2 seconds
+const LASER_TIMER = 800; // Laser stays for 0.8 seconds
+const LASER_RANGE = 3;
 const INITIAL_ENEMY_COUNT = 3;
 
 const PracticeGameV2: React.FC = () => {
@@ -47,6 +60,7 @@ const PracticeGameV2: React.FC = () => {
   const [playerPos, setPlayerPos] = useState<Position>({ x: 1, y: 1 });
   const [bombs, setBombs] = useState<Bomb[]>([]);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
+  const [laserBeams, setLaserBeams] = useState<LaserBeam[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [destructibleWalls, setDestructibleWalls] = useState<Set<string>>(new Set());
   const [gameGrid, setGameGrid] = useState<CellType[][]>([]);
@@ -58,6 +72,7 @@ const PracticeGameV2: React.FC = () => {
   
   const bombIdRef = useRef(0);
   const explosionIdRef = useRef(0);
+  const laserIdRef = useRef(0);
   const enemyIdRef = useRef(0);
 
   // Initialize game grid
@@ -123,7 +138,8 @@ const PracticeGameV2: React.FC = () => {
           x,
           y,
           direction: Math.floor(Math.random() * 4),
-          lastMoveTime: Date.now()
+          lastMoveTime: Date.now(),
+          lastShootTime: Date.now()
         });
         enemyPositions.add(`${x},${y}`);
       }
@@ -231,15 +247,60 @@ const PracticeGameV2: React.FC = () => {
     }));
   }, [gameGrid]);
 
-  // Move enemies with simple AI
+  // Create laser beam
+  const createLaserBeam = useCallback((enemy: Enemy) => {
+    const directions = [
+      { dx: 0, dy: -1 }, // up
+      { dx: 1, dy: 0 },  // right
+      { dx: 0, dy: 1 },  // down
+      { dx: -1, dy: 0 }  // left
+    ];
+    
+    const direction = directions[enemy.direction];
+    const newLasers: LaserBeam[] = [];
+    
+    // Create laser beam in the direction the enemy is facing
+    for (let i = 1; i <= LASER_RANGE; i++) {
+      const x = enemy.x + direction.dx * i;
+      const y = enemy.y + direction.dy * i;
+      
+      // Check boundaries
+      if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) break;
+      
+      // Stop at walls (both regular and destructible)
+      if (gameGrid[y][x] === 'wall' || gameGrid[y][x] === 'destructible') break;
+      
+      newLasers.push({
+        id: laserIdRef.current++,
+        x,
+        y,
+        direction: enemy.direction,
+        timer: LASER_TIMER,
+        enemyId: enemy.id
+      });
+    }
+    
+    setLaserBeams(prev => [...prev, ...newLasers]);
+  }, [gameGrid]);
+
+  // Move enemies with simple AI and laser shooting
   const moveEnemies = useCallback(() => {
     if (gameOver || gameWon) return;
     
     const currentTime = Date.now();
     
     setEnemies(prev => prev.map(enemy => {
+      let updatedEnemy = { ...enemy };
+      
+      // Handle shooting
+      if (currentTime - enemy.lastShootTime >= ENEMY_SHOOT_INTERVAL) {
+        createLaserBeam(enemy);
+        updatedEnemy.lastShootTime = currentTime;
+      }
+      
+      // Handle movement
       if (currentTime - enemy.lastMoveTime < ENEMY_MOVE_INTERVAL) {
-        return enemy;
+        return updatedEnemy;
       }
       
       const directions = [
@@ -292,19 +353,25 @@ const PracticeGameV2: React.FC = () => {
       }
       
       return {
-        ...enemy,
+        ...updatedEnemy,
         x: newX,
         y: newY,
         direction: newDirection,
         lastMoveTime: currentTime
       };
     }));
-  }, [gameGrid, bombs, gameOver, gameWon]);
-  // Check if player is hit by explosion or touches enemy
+  }, [gameGrid, bombs, gameOver, gameWon, createLaserBeam]);
+
+  // Check if player is hit by explosion, laser, or touches enemy
   const checkPlayerHit = useCallback(() => {
     // Check explosion collision
     const playerHitByExplosion = explosions.some(explosion => 
       explosion.x === playerPos.x && explosion.y === playerPos.y
+    );
+    
+    // Check laser collision
+    const playerHitByLaser = laserBeams.some(laser =>
+      laser.x === playerPos.x && laser.y === playerPos.y
     );
     
     // Check enemy collision
@@ -312,10 +379,10 @@ const PracticeGameV2: React.FC = () => {
       enemy.x === playerPos.x && enemy.y === playerPos.y
     );
     
-    if (playerHitByExplosion || playerHitByEnemy) {
+    if (playerHitByExplosion || playerHitByLaser || playerHitByEnemy) {
       setGameOver(true);
     }
-  }, [explosions, enemies, playerPos]);
+  }, [explosions, laserBeams, enemies, playerPos]);
 
   // Check win condition
   const checkWinCondition = useCallback(() => {
@@ -323,6 +390,7 @@ const PracticeGameV2: React.FC = () => {
       setGameWon(true);
     }
   }, [enemies, gameOver]);
+
   // Update game grid with current state
   useEffect(() => {
     if (gameGrid.length === 0) return;
@@ -368,6 +436,12 @@ const PracticeGameV2: React.FC = () => {
             .filter(explosion => explosion.timer > 0)
       );
       
+      // Update laser timers
+      setLaserBeams(prev =>
+        prev.map(laser => ({ ...laser, timer: laser.timer - 100 }))
+            .filter(laser => laser.timer > 0)
+      );
+      
       // Move enemies
       moveEnemies();
     }, 100);
@@ -375,7 +449,7 @@ const PracticeGameV2: React.FC = () => {
     return () => clearInterval(interval);
   }, [createExplosion, moveEnemies]);
 
-  // Check for player collision with explosions and enemies
+  // Check for player collision with explosions, lasers, and enemies
   useEffect(() => {
     checkPlayerHit();
   }, [checkPlayerHit]);
@@ -443,12 +517,14 @@ const PracticeGameV2: React.FC = () => {
     setPlayerPos({ x: 1, y: 1 });
     setBombs([]);
     setExplosions([]);
+    setLaserBeams([]);
     setEnemies([]);
     setScore(0);
     setGameOver(false);
     setGameWon(false);
     bombIdRef.current = 0;
     explosionIdRef.current = 0;
+    laserIdRef.current = 0;
     enemyIdRef.current = 0;
     initializeGrid();
   };
@@ -479,6 +555,7 @@ const PracticeGameV2: React.FC = () => {
     const isPlayer = playerPos.x === x && playerPos.y === y;
     const bomb = bombs.find(b => b.x === x && b.y === y);
     const explosion = explosions.find(e => e.x === x && e.y === y);
+    const laser = laserBeams.find(l => l.x === x && l.y === y);
     const enemy = enemies.find(e => e.x === x && e.y === y);
     const cellType = gameGrid[y]?.[x];
     
@@ -488,6 +565,9 @@ const PracticeGameV2: React.FC = () => {
     if (explosion) {
       cellClass += "bg-orange-400 animate-pulse";
       content = "💥";
+    } else if (laser) {
+      cellClass += "bg-red-400 animate-pulse";
+      content = "⚡";
     } else if (bomb) {
       cellClass += "bg-yellow-500 animate-bounce";
       content = "🧨";
@@ -665,7 +745,8 @@ const PracticeGameV2: React.FC = () => {
           </div>
           <p>Drop Firework: Space or Enter</p>
           <p>Destroy boxes (📦) to earn points!</p>
-          <p>Avoid explosions (💥) or you'll lose!</p>
+          <p>Avoid explosions (💥), laser beams (⚡), and enemies (👾)!</p>
+          <p className="text-red-400 font-semibold">NEW: Enemies now shoot laser beams every 2 seconds!</p>
         </div>
 
         <div className="flex justify-end">
