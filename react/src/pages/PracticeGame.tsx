@@ -39,7 +39,7 @@ const BOMB_TIMER = 3000; // 3 seconds
 const EXPLOSION_TIMER = 500; // 0.5 seconds
 const EXPLOSION_RANGE = 2;
 const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
-const INITIAL_ENEMY_COUNT = 3;
+const INITIAL_ENEMY_COUNT = 10;
 
 const PracticeGame: React.FC = () => {
   const navigate = useNavigate();
