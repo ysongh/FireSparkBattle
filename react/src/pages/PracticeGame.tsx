@@ -4,33 +4,7 @@ import { CircleHelp } from "lucide-react";
 import { sdk } from "@farcaster/frame-sdk";
 
 import { HowToPlayPopup } from '../components/HowToPlayPopup';
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface Bomb {
-  id: number;
-  x: number;
-  y: number;
-  timer: number;
-}
-
-interface Explosion {
-  id: number;
-  x: number;
-  y: number;
-  timer: number;
-}
-
-interface Enemy {
-  id: number;
-  x: number;
-  y: number;
-  direction: number; // 0: up, 1: right, 2: down, 3: left
-  lastMoveTime: number;
-}
+import { Position, Bomb, Explosion, Enemy } from '../types';
 
 type CellType = 'empty' | 'wall' | 'destructible' | 'player' | 'bomb' | 'explosion' | 'enemy';
 
