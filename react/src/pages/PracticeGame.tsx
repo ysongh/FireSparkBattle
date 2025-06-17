@@ -493,7 +493,7 @@ const PracticeGame: React.FC = () => {
       content = "🧨";
     } else if (isPlayer) {
       cellClass += "bg-blue-400";
-      content = "🤖";
+      content = gameOver && isStarted ?  "💀" : "🤖";
     } else if (enemy) {
       cellClass += "bg-purple-400 animate-pulse";
       content = "👾";
