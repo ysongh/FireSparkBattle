@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CircleHelp } from "lucide-react";
 import { sdk } from "@farcaster/frame-sdk";
 
+import GameHeader from '../components/GameHeader';
 import { HowToPlayPopup } from '../components/HowToPlayPopup';
 
 interface Position {
@@ -600,20 +601,11 @@ const PracticeGameV2: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center p-4 bg-gray-900 min-h-screen text-white">
-      <div className="flex mb-2">
-        <h1 className="text-3xl font-bold text-yellow-400 mr-3">Fire Spark Battle</h1>
-        <button 
-          onClick={() => setIsOpen(true)}
-          className="px-1 bg-yellow-600 hover:bg-yellow-700 rounded"
-        >
-          <CircleHelp className="h-7 w-7" />
-        </button>
-      </div>
-     
-      <div className="mb-2 flex gap-4 items-center">
-        <span className="text-lg">Score: {score}</span>
-        <span className="text-lg">Enemies: {enemies.length}</span>
-      </div>
+      <GameHeader
+        score={score}
+        numberOfEnemies={enemies.length}
+        setIsOpen={setIsOpen}
+      />
 
       {gameOver && !gameWon && (
         <button
