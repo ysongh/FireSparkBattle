@@ -13,7 +13,7 @@ const BOMB_TIMER = 3000; // 3 seconds
 const EXPLOSION_TIMER = 500; // 0.5 seconds
 const EXPLOSION_RANGE = 2;
 const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
-const INITIAL_ENEMY_COUNT = 10;
+const INITIAL_ENEMY_COUNT = 1;
 
 const PracticeGame: React.FC = () => {
   const navigate = useNavigate();
@@ -581,10 +581,10 @@ const PracticeGame: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="text-green-400 font-bold">You Win! 🎉</span>
           <button 
-            onClick={resetGame}
+            onClick={() => navigate("/practicev2")}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded"
           >
-            Play Again
+            Next Level
           </button>
         </div>
       )}

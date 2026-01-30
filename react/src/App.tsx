@@ -4,7 +4,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 
 import Lobby from "./pages/Lobby";
 import PracticeGame from "./pages/PracticeGame";
-// import PracticeGameV2 from "./pages/PracticeGameLV2";
+import PracticeGameV2 from "./pages/PracticeGameLV2";
 import MultiplayerGame from "./pages/MultiplayerGame";
 import HowToPlay from "./pages/HowToPlay";
 
@@ -22,6 +22,9 @@ function App() {
         <Route
           path="/practice"
           element={<PracticeGame />} />
+        <Route
+          path="/practicev2"
+          element={<PracticeGameV2 />} />
         <Route
           path="/multiplayer"
           element={<MultiplayerGame />} />
