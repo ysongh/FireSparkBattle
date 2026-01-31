@@ -1,0 +1,12 @@
+{
+  "name": "firesparkbattle",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "react": "cd react && pnpm dev",
+    "nodejs": "cd server && pnpm dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

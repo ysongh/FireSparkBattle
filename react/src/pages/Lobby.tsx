@@ -26,14 +26,14 @@ function Lobby() {
         </button>
         
         {/* Multiplayer Button */}
-        {/* <button
+        <button
           onClick={() => navigate("/multiplayer")}
           className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 
                       rounded-xl text-xl font-bold transform hover:scale-105 transition-all duration-200 
                       shadow-lg hover:shadow-xl border-2 border-blue-400/50 hover:border-blue-300"
         >
           👥 Multiplayer
-        </button> */}
+        </button>
         
         {/* Settings Button */}
         <button
