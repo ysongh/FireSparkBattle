@@ -80,6 +80,20 @@ function initializeGrid() {
   return { grid, destructibleWalls };
 }
 
+// Helper function to build gameState payload (ensures consistency)
+function buildGameStatePayload(room) {
+  return {
+    players: room.gameState.players,
+    bombs: room.gameState.bombs,
+    explosions: room.gameState.explosions,
+    destructibleWalls: room.gameState.destructibleWalls,
+    grid: room.gameState.grid,  // FIX: Include grid in every gameState emission
+    gameStarted: room.gameState.gameStarted,
+    gameOver: room.gameState.gameOver,
+    winner: room.gameState.winner
+  };
+}
+
 // Create explosion
 function createExplosion(room, bombX, bombY, bombPlayerId) {
   const explosions = [];
@@ -167,16 +181,8 @@ function startGameLoop(roomCode) {
       return explosion.timer > 0;
     });
     
-    // Broadcast updated game state
-    io.to(roomCode).emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    // Broadcast updated game state (now includes grid)
+    io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   }, 100);
 }
 
@@ -225,15 +231,7 @@ io.on('connection', (socket) => {
     
     socket.emit('roomCreated', { roomCode });
     socket.emit('gameGrid', grid);
-    socket.emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    socket.emit('gameState', buildGameStatePayload(room));
   });
   
   socket.on('joinRoom', ({ roomCode, playerName }) => {
@@ -281,15 +279,7 @@ io.on('connection', (socket) => {
       players: room.gameState.players 
     });
     
-    io.to(roomCode).emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   });
   
   socket.on('startGame', () => {
@@ -312,15 +302,7 @@ io.on('connection', (socket) => {
       player.bombCount = 0;  // Reset bomb count when game starts
     });
     
-    io.to(roomCode).emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    io.to(roomCode).emit('gameState', buildGameStatePayload(room));
     
     startGameLoop(roomCode);
   });
@@ -363,15 +345,7 @@ io.on('connection', (socket) => {
     player.y = newY;
     
     // Broadcast position update
-    io.to(roomCode).emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   });
   
   socket.on('placeBomb', () => {
@@ -403,15 +377,7 @@ io.on('connection', (socket) => {
     room.gameState.bombs.push(bomb);
     player.bombCount++; // Increment bomb count for this player
     
-    io.to(roomCode).emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   });
   
   socket.on('resetGame', () => {
@@ -451,15 +417,7 @@ io.on('connection', (socket) => {
     }
     
     io.to(roomCode).emit('gameGrid', grid);
-    io.to(roomCode).emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   });
   
   socket.on('leaveRoom', () => {
@@ -515,15 +473,7 @@ io.on('connection', (socket) => {
       }
     }
     
-    io.to(roomCode).emit('gameState', {
-      players: room.gameState.players,
-      bombs: room.gameState.bombs,
-      explosions: room.gameState.explosions,
-      destructibleWalls: room.gameState.destructibleWalls,
-      gameStarted: room.gameState.gameStarted,
-      gameOver: room.gameState.gameOver,
-      winner: room.gameState.winner
-    });
+    io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   }
 });
 

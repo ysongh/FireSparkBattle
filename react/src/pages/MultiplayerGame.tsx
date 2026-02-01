@@ -31,6 +31,7 @@ interface GameState {
   bombs: Bomb[];
   explosions: Explosion[];
   destructibleWalls: string[];
+  grid?: CellType[][];
   gameStarted: boolean;
   gameOver: boolean;
   winner?: string;
@@ -73,6 +74,10 @@ const MultiplayerGame: React.FC = () => {
 
     newSocket.on('gameState', (state: GameState) => {
       setGameState(state);
+      // FIX: Update gameGrid when grid is included in gameState
+      if (state.grid) {
+        setGameGrid(state.grid);
+      }
     });
 
     newSocket.on('playerJoined', (data: { playerId: string, players: Record<string, Player> }) => {
