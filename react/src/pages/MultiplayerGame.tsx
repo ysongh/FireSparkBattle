@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { sdk } from "@farcaster/frame-sdk";
+
+import MobileTouchControlsType2 from '../components/MobileTouchControlsType2';
 
 interface Player {
   id: string;
@@ -211,6 +214,18 @@ const MultiplayerGame: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [movePlayer, placeBomb, showNameInput, gameState.gameStarted]);
 
+  const handleButtonPress = async (dir: string) => {
+    // @ts-ignore
+    await sdk.haptics.impactOccurred('light');
+    movePlayer(dir);
+  }
+
+  const handleFireworkPress = async () => {
+    // @ts-ignore
+    await sdk.haptics.impactOccurred('heavy');
+    placeBomb();
+  }
+
   // Render cell content
   const renderCell = (x: number, y: number) => {
     const playersAtPos = Object.values(gameState.players).filter(p => p.x === x && p.y === y && p.alive);
@@ -375,6 +390,9 @@ const MultiplayerGame: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Mobile/Touch Controls */}
+      <MobileTouchControlsType2 gameOver={false} handleFireworkPress={handleFireworkPress} handleButtonPress={handleButtonPress} />
       
       {/* Instructions */}
       <div className="text-center max-w-md">
