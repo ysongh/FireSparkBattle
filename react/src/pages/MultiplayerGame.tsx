@@ -217,6 +217,7 @@ const MultiplayerGame: React.FC = () => {
   const handleButtonPress = async (dir: string) => {
     // @ts-ignore
     await sdk.haptics.impactOccurred('light');
+    // @ts-ignore
     movePlayer(dir);
   }
 
@@ -328,7 +329,7 @@ const MultiplayerGame: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center p-4 bg-gray-900 min-h-screen text-white">
-      <h1 className="text-3xl font-bold mb-4 text-yellow-400">💣 Multiplayer Fire Spark Battle</h1>
+      <h1 className="text-3xl font-bold mb-4 text-yellow-400">🧨 Multiplayer Fire Spark Battle</h1>
       
       <div className="mb-4 flex flex-wrap gap-4 items-center justify-center">
         <span className="text-lg">Room: {roomCode}</span>
@@ -345,6 +346,12 @@ const MultiplayerGame: React.FC = () => {
           </span>
         )}
       </div>
+
+      {!gameState.gameStarted && Object.keys(gameState.players).length < 2 && (
+        <div className="mb-3 p-3 bg-yellow-800 rounded text-yellow-200">
+          Waiting for more players... (Need at least 2 players)
+        </div>
+      )}
       
       {/* Player List */}
       <div className="mb-4 flex flex-wrap gap-2 justify-center">
@@ -403,12 +410,6 @@ const MultiplayerGame: React.FC = () => {
           <p>Destroy boxes (📦) to earn points!</p>
           <p>Eliminate other players to win!</p>
         </div>
-        
-        {!gameState.gameStarted && Object.keys(gameState.players).length < 2 && (
-          <div className="mt-4 p-3 bg-yellow-800 rounded text-yellow-200">
-            Waiting for more players... (Need at least 2 players)
-          </div>
-        )}
       </div>
     </div>
   );
