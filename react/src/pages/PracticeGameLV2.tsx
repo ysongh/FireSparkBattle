@@ -54,6 +54,7 @@ const ENEMY_SHOOT_INTERVAL = 2000; // Enemy shoots every 2 seconds
 const LASER_TIMER = 800; // Laser stays for 0.8 seconds
 const LASER_RANGE = 3;
 const INITIAL_ENEMY_COUNT = 3;
+const MAX_BOMBS = 1; // Maximum number of bombs player can place at once
 
 const PracticeGameV2: React.FC = () => {
   const navigate = useNavigate();
@@ -187,8 +188,12 @@ const PracticeGameV2: React.FC = () => {
   const placeBomb = useCallback(() => {
     if (gameOver) return;
     
-    // Limit to only one bomb at a time
-    if (bombs.length > 0) return;
+    // Limit to MAX_BOMBS at a time
+    if (bombs.length >= MAX_BOMBS) return;
+    
+    // Check if there's already a bomb at player's position
+    const bombAtPlayerPos = bombs.find(bomb => bomb.x === playerPos.x && bomb.y === playerPos.y);
+    if (bombAtPlayerPos) return;
     
     const newBomb: Bomb = {
       id: bombIdRef.current++,

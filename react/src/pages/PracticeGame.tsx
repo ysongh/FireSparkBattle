@@ -15,6 +15,7 @@ const EXPLOSION_TIMER = 500; // 0.5 seconds
 const EXPLOSION_RANGE = 2;
 const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
 const INITIAL_ENEMY_COUNT = 10;
+const MAX_BOMBS = 1; // Maximum number of bombs player can place at once
 
 const PracticeGame: React.FC = () => {
   const navigate = useNavigate();
@@ -145,8 +146,12 @@ const PracticeGame: React.FC = () => {
   const placeBomb = useCallback(() => {
     if (gameOver) return;
     
-    // Limit to only one bomb at a time
-    if (bombs.length > 0) return;
+    // Limit to MAX_BOMBS at a time
+    if (bombs.length >= MAX_BOMBS) return;
+    
+    // Check if there's already a bomb at player's position
+    const bombAtPlayerPos = bombs.find(bomb => bomb.x === playerPos.x && bomb.y === playerPos.y);
+    if (bombAtPlayerPos) return;
     
     const newBomb: Bomb = {
       id: bombIdRef.current++,
@@ -580,6 +585,7 @@ const PracticeGame: React.FC = () => {
             </div>
           </div>
           <p>Drop Firework: Space or Enter</p>
+          <p>You can place up to {MAX_BOMBS} fireworks at once!</p>
           <p>Destroy boxes (📦) to earn points!</p>
           <p>Avoid explosions (💥) or you'll lose!</p>
         </div>
