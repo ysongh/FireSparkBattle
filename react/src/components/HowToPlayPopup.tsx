@@ -11,7 +11,7 @@ interface PopupProps {
   className?: string
 }
 
-export const HowToPlayPopup: React.FC<PopupProps> = ({ isOpen, onClose, title, children, className = "" }) => {
+export const Popup: React.FC<PopupProps> = ({ isOpen, onClose, title, children, className = "" }) => {
   const [mounted, setMounted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -90,4 +90,50 @@ export const HowToPlayPopup: React.FC<PopupProps> = ({ isOpen, onClose, title, c
         document.body,
       )
     : null
+}
+
+interface HowItWorksPopupProps {
+  isOpen: boolean
+  onClose: () => void
+  title?: string
+}
+
+export const HowToPlayPopup = ({ isOpen, onClose, title } : HowItWorksPopupProps) => {
+  return (
+    <Popup isOpen={isOpen} onClose={onClose} title={title}>
+      <div className="text-sm space-y-1">
+        <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center">
+          🎮 Controls
+        </h3>
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center gap-3">
+            <span className="bg-gray-200 px-2 py-1 rounded text-sm">↑↓←→</span>
+            <span>or</span>
+            <span className="bg-gray-200 px-2 py-1 rounded text-sm">WASD</span>
+            <span>Move Player</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="bg-gray-200 px-2 py-1 rounded text-sm">Firework Button</span>
+            <span>or</span>
+            <span className="bg-gray-200 px-2 py-1 rounded text-sm">Space</span>
+            <span>or</span>
+            <span className="bg-gray-200 px-2 py-1 rounded text-sm">Enter</span>
+            <span>Drop Fireworks</span>
+          </div>
+        </div>
+        <p>Drop Firework: Space or Enter</p>
+        <p>Destroy boxes (📦) to earn points!</p>
+        <p>Avoid explosions (💥) or you'll lose!</p>
+      </div>
+
+      <div className="flex justify-end">
+        <button 
+          onClick={onClose}
+          className="px-4 py-2 bg-red-400 hover:bg-red-600 rounded"
+        >
+          Close
+        </button>
+      </div>
+    </Popup>
+  )
 }

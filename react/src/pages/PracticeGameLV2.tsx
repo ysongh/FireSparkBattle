@@ -669,42 +669,7 @@ const PracticeGameV2: React.FC = () => {
         </div>
       )}
       
-      <HowToPlayPopup isOpen={isOpen} onClose={() => setIsOpen(false)} title="How to Play:">
-        <div className="text-sm space-y-1">
-          <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center">
-            🎮 Controls
-          </h3>
-          <div className="space-y-2 mb-3">
-            <div className="flex items-center gap-3">
-              <span className="bg-gray-200 px-2 py-1 rounded text-sm">↑↓←→</span>
-              <span>or</span>
-              <span className="bg-gray-200 px-2 py-1 rounded text-sm">WASD</span>
-              <span>Move Player</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Firework Button</span>
-              <span>or</span>
-              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Space</span>
-              <span>or</span>
-              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Enter</span>
-              <span>Drop Fireworks</span>
-            </div>
-          </div>
-          <p>Drop Firework: Space or Enter</p>
-          <p>Destroy boxes (📦) to earn points!</p>
-          <p>Avoid explosions (💥), laser beams (⚡), and enemies (👾)!</p>
-          <p className="text-red-400 font-semibold">NEW: Enemies now shoot laser beams every 2 seconds!</p>
-        </div>
-
-        <div className="flex justify-end">
-          <button 
-            onClick={() => setIsOpen(false)}
-            className="px-4 py-2 bg-red-400 hover:bg-red-600 rounded"
-          >
-            Close
-          </button>
-        </div>
-      </HowToPlayPopup>
+     <HowToPlayPopup isOpen={isOpen} onClose={() => setIsOpen(false)} title="How to Play:" />
     </div>
   );
 };
