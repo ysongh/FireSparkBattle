@@ -7,15 +7,22 @@ import MobileTouchControls from '../components/MobileTouchControls';
 import { HowToPlayPopup } from '../components/HowToPlayPopup';
 import { Position, Bomb, Explosion, Enemy } from '../types';
 
-type CellType = 'empty' | 'wall' | 'destructible' | 'player' | 'bomb' | 'explosion' | 'enemy';
+type CellType = 'empty' | 'wall' | 'destructible' | 'player' | 'bomb' | 'explosion' | 'enemy' | 'powerup';
+
+interface PowerUp {
+  id: number;
+  x: number;
+  y: number;
+  type: 'explosion_range';
+}
 
 const GRID_SIZE = 13;
 const BOMB_TIMER = 3000; // 3 seconds
 const EXPLOSION_TIMER = 500; // 0.5 seconds
-const EXPLOSION_RANGE = 2;
+const EXPLOSION_RANGE = 1;
 const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
 const INITIAL_ENEMY_COUNT = 10;
-const MAX_BOMBS = 1; // Maximum number of bombs player can place at once
+const MAX_BOMBS = 2; // Maximum number of bombs player can place at once
 
 const PracticeGame: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +31,8 @@ const PracticeGame: React.FC = () => {
   const [bombs, setBombs] = useState<Bomb[]>([]);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
+  const [explosionRange, setExplosionRange] = useState(EXPLOSION_RANGE);
   const [destructibleWalls, setDestructibleWalls] = useState<Set<string>>(new Set());
   const [gameGrid, setGameGrid] = useState<CellType[][]>([]);
   const [score, setScore] = useState(0);
@@ -35,6 +44,7 @@ const PracticeGame: React.FC = () => {
   const bombIdRef = useRef(0);
   const explosionIdRef = useRef(0);
   const enemyIdRef = useRef(0);
+  const powerUpIdRef = useRef(0);
 
   // Initialize game grid
   const initializeGrid = useCallback(() => {
@@ -138,9 +148,19 @@ const PracticeGame: React.FC = () => {
         return prev;
       }
       
+      // Check if moving into a power-up
+      const powerUpAtPos = powerUps.find(powerUp => powerUp.x === newX && powerUp.y === newY);
+      if (powerUpAtPos) {
+        // Collect the power-up
+        if (powerUpAtPos.type === 'explosion_range') {
+          setExplosionRange(prev => prev + 1);
+        }
+        setPowerUps(prev => prev.filter(p => p.id !== powerUpAtPos.id));
+      }
+      
       return { x: newX, y: newY };
     });
-  }, [gameGrid, bombs, enemies, gameOver, gameWon]);
+  }, [gameGrid, bombs, enemies, powerUps, gameOver, gameWon]);
 
   // Place bomb
   const placeBomb = useCallback(() => {
@@ -169,7 +189,7 @@ const PracticeGame: React.FC = () => {
     const directions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
     
     directions.forEach(([dx, dy]) => {
-      for (let i = 0; i <= EXPLOSION_RANGE; i++) {
+      for (let i = 0; i <= explosionRange; i++) {
         const x = bombX + dx * i;
         const y = bombY + dy * i;
         
@@ -183,7 +203,7 @@ const PracticeGame: React.FC = () => {
           timer: EXPLOSION_TIMER
         });
         
-        // Destroy destructible walls
+        // Destroy destructible walls and potentially drop power-ups
         if (gameGrid[y][x] === 'destructible') {
           setDestructibleWalls(prev => {
             const newSet = new Set(prev);
@@ -191,6 +211,18 @@ const PracticeGame: React.FC = () => {
             return newSet;
           });
           setScore(prev => prev + 10);
+          
+          // 10% chance to drop a power-up
+          if (Math.random() < 0.1) {
+            const newPowerUp: PowerUp = {
+              id: powerUpIdRef.current++,
+              x,
+              y,
+              type: 'explosion_range'
+            };
+            setPowerUps(prev => [...prev, newPowerUp]);
+          }
+          
           break;
         }
       }
@@ -209,7 +241,7 @@ const PracticeGame: React.FC = () => {
       }
       return true;
     }));
-  }, [gameGrid]);
+  }, [gameGrid, explosionRange]);
 
   // Move enemies with simple AI
   const moveEnemies = useCallback(() => {
@@ -424,12 +456,15 @@ const PracticeGame: React.FC = () => {
     setBombs([]);
     setExplosions([]);
     setEnemies([]);
+    setPowerUps([]);
+    setExplosionRange(EXPLOSION_RANGE);
     setScore(0);
     setGameOver(false);
     setGameWon(false);
     bombIdRef.current = 0;
     explosionIdRef.current = 0;
     enemyIdRef.current = 0;
+    powerUpIdRef.current = 0;
     initializeGrid();
   };
 
@@ -460,6 +495,7 @@ const PracticeGame: React.FC = () => {
     const bomb = bombs.find(b => b.x === x && b.y === y);
     const explosion = explosions.find(e => e.x === x && e.y === y);
     const enemy = enemies.find(e => e.x === x && e.y === y);
+    const powerUp = powerUps.find(p => p.x === x && p.y === y);
     const cellType = gameGrid[y]?.[x];
     
     let cellClass = "w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-bold ";
@@ -474,6 +510,9 @@ const PracticeGame: React.FC = () => {
     } else if (isPlayer) {
       cellClass += "bg-blue-400";
       content = gameOver && isStarted ?  "💀" : "🤖";
+    } else if (powerUp) {
+      cellClass += "bg-cyan-400 animate-pulse";
+      content = "⭐";
     } else if (enemy) {
       cellClass += "bg-purple-400 animate-pulse";
       content = "👾";
@@ -505,6 +544,11 @@ const PracticeGame: React.FC = () => {
         numberOfEnemies={enemies.length}
         setIsOpen={setIsOpen}
       />
+      
+      {/* Display current explosion range */}
+      <div className="mb-2 text-lg font-bold text-cyan-400">
+        💥 Explosion Range: {explosionRange}
+      </div>
 
       {gameOver && !gameWon && (
         <button
@@ -563,7 +607,43 @@ const PracticeGame: React.FC = () => {
         </div>
       )}
       
-      <HowToPlayPopup isOpen={isOpen} onClose={() => setIsOpen(false)} title="How to Play:" />
+      <HowToPlayPopup isOpen={isOpen} onClose={() => setIsOpen(false)} title="How to Play:">
+        <div className="text-sm space-y-1">
+          <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center">
+            🎮 Controls
+          </h3>
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center gap-3">
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">↑↓←→</span>
+              <span>or</span>
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">WASD</span>
+              <span>Move Player</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Firework Button</span>
+              <span>or</span>
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Space</span>
+              <span>or</span>
+              <span className="bg-gray-200 px-2 py-1 rounded text-sm">Enter</span>
+              <span>Drop Fireworks</span>
+            </div>
+          </div>
+          <p>Drop Firework: Space or Enter</p>
+          <p>You can place up to {MAX_BOMBS} fireworks at once!</p>
+          <p>Destroy boxes (📦) to earn points!</p>
+          <p>Collect power-ups (⭐) to increase explosion range!</p>
+          <p>Avoid explosions (💥) or you'll lose!</p>
+        </div>
+
+        <div className="flex justify-end">
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-2 bg-red-400 hover:bg-red-600 rounded"
+          >
+            Close
+          </button>
+        </div>
+      </HowToPlayPopup>
     </div>
   );
 };
