@@ -22,7 +22,7 @@ const EXPLOSION_TIMER = 500; // 0.5 seconds
 const EXPLOSION_RANGE = 1;
 const ENEMY_MOVE_INTERVAL = 800; // Enemy moves every 800ms
 const INITIAL_ENEMY_COUNT = 10;
-const MAX_BOMBS = 2; // Maximum number of bombs player can place at once
+const MAX_BOMBS = 1; // Maximum number of bombs player can place at once
 
 const PracticeGame: React.FC = () => {
   const navigate = useNavigate();
@@ -122,45 +122,46 @@ const PracticeGame: React.FC = () => {
   const movePlayer = useCallback((dx: number, dy: number) => {
     if (gameOver || gameWon) return;
     
-    setPlayerPos(prev => {
-      const newX = prev.x + dx;
-      const newY = prev.y + dy;
-      
-      // Check boundaries and collisions
-      if (newX < 1 || newX >= GRID_SIZE - 1 || newY < 1 || newY >= GRID_SIZE - 1) {
-        return prev;
+    // First, calculate the new position
+    const currentX = playerPos.x;
+    const currentY = playerPos.y;
+    const newX = currentX + dx;
+    const newY = currentY + dy;
+    
+    // Check boundaries and collisions
+    if (newX < 1 || newX >= GRID_SIZE - 1 || newY < 1 || newY >= GRID_SIZE - 1) {
+      return;
+    }
+    
+    if (gameGrid[newY][newX] === 'wall' || gameGrid[newY][newX] === 'destructible') {
+      return;
+    }
+    
+    // Check if moving into a bomb
+    const bombAtPos = bombs.find(bomb => bomb.x === newX && bomb.y === newY);
+    if (bombAtPos) {
+      return;
+    }
+    
+    // Check if moving into an enemy
+    const enemyAtPos = enemies.find(enemy => enemy.x === newX && enemy.y === newY);
+    if (enemyAtPos) {
+      setGameOver(true);
+      return;
+    }
+    
+    // Check if moving into a power-up and collect it
+    const powerUpAtPos = powerUps.find(powerUp => powerUp.x === newX && powerUp.y === newY);
+    if (powerUpAtPos) {
+      if (powerUpAtPos.type === 'explosion_range') {
+        setExplosionRange(prevRange => prevRange + 1);
       }
-      
-      if (gameGrid[newY][newX] === 'wall' || gameGrid[newY][newX] === 'destructible') {
-        return prev;
-      }
-      
-      // Check if moving into a bomb
-      const bombAtPos = bombs.find(bomb => bomb.x === newX && bomb.y === newY);
-      if (bombAtPos) {
-        return prev;
-      }
-      
-      // Check if moving into an enemy
-      const enemyAtPos = enemies.find(enemy => enemy.x === newX && enemy.y === newY);
-      if (enemyAtPos) {
-        setGameOver(true);
-        return prev;
-      }
-      
-      // Check if moving into a power-up
-      const powerUpAtPos = powerUps.find(powerUp => powerUp.x === newX && powerUp.y === newY);
-      if (powerUpAtPos) {
-        // Collect the power-up
-        if (powerUpAtPos.type === 'explosion_range') {
-          setExplosionRange(prev => prev + 1);
-        }
-        setPowerUps(prev => prev.filter(p => p.id !== powerUpAtPos.id));
-      }
-      
-      return { x: newX, y: newY };
-    });
-  }, [gameGrid, bombs, enemies, powerUps, gameOver, gameWon]);
+      setPowerUps(prevPowerUps => prevPowerUps.filter(p => p.id !== powerUpAtPos.id));
+    }
+    
+    // Finally update player position
+    setPlayerPos({ x: newX, y: newY });
+  }, [gameGrid, bombs, enemies, powerUps, gameOver, gameWon, playerPos]);
 
   // Place bomb
   const placeBomb = useCallback(() => {
@@ -212,8 +213,8 @@ const PracticeGame: React.FC = () => {
           });
           setScore(prev => prev + 10);
           
-          // 10% chance to drop a power-up
-          if (Math.random() < 0.1) {
+          // 30% chance to drop a power-up
+          if (Math.random() < 0.3) {
             const newPowerUp: PowerUp = {
               id: powerUpIdRef.current++,
               x,
