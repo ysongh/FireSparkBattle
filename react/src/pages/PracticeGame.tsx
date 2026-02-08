@@ -13,7 +13,7 @@ interface PowerUp {
   id: number;
   x: number;
   y: number;
-  type: 'explosion_range';
+  type: 'explosion_range' | 'max_bombs';
 }
 
 const GRID_SIZE = 13;
@@ -33,6 +33,7 @@ const PracticeGame: React.FC = () => {
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [explosionRange, setExplosionRange] = useState(EXPLOSION_RANGE);
+  const [maxBombs, setMaxBombs] = useState(MAX_BOMBS);
   const [destructibleWalls, setDestructibleWalls] = useState<Set<string>>(new Set());
   const [gameGrid, setGameGrid] = useState<CellType[][]>([]);
   const [score, setScore] = useState(0);
@@ -155,6 +156,8 @@ const PracticeGame: React.FC = () => {
     if (powerUpAtPos) {
       if (powerUpAtPos.type === 'explosion_range') {
         setExplosionRange(prevRange => prevRange + 1);
+      } else if (powerUpAtPos.type === 'max_bombs') {
+        setMaxBombs(prevMax => prevMax + 1);
       }
       setPowerUps(prevPowerUps => prevPowerUps.filter(p => p.id !== powerUpAtPos.id));
     }
@@ -167,8 +170,8 @@ const PracticeGame: React.FC = () => {
   const placeBomb = useCallback(() => {
     if (gameOver) return;
     
-    // Limit to MAX_BOMBS at a time
-    if (bombs.length >= MAX_BOMBS) return;
+    // Limit to maxBombs at a time
+    if (bombs.length >= maxBombs) return;
     
     // Check if there's already a bomb at player's position
     const bombAtPlayerPos = bombs.find(bomb => bomb.x === playerPos.x && bomb.y === playerPos.y);
@@ -182,7 +185,7 @@ const PracticeGame: React.FC = () => {
     };
     
     setBombs(prev => [...prev, newBomb]);
-  }, [playerPos, bombs, gameOver]);
+  }, [playerPos, bombs, gameOver, maxBombs]);
 
   // Create explosion
   const createExplosion = useCallback((bombX: number, bombY: number) => {
@@ -215,11 +218,13 @@ const PracticeGame: React.FC = () => {
           
           // 30% chance to drop a power-up
           if (Math.random() < 0.3) {
+            // Randomly choose which type of power-up to drop (50/50 chance)
+            const powerUpType = Math.random() < 0.5 ? 'explosion_range' : 'max_bombs';
             const newPowerUp: PowerUp = {
               id: powerUpIdRef.current++,
               x,
               y,
-              type: 'explosion_range'
+              type: powerUpType
             };
             setPowerUps(prev => [...prev, newPowerUp]);
           }
@@ -459,6 +464,7 @@ const PracticeGame: React.FC = () => {
     setEnemies([]);
     setPowerUps([]);
     setExplosionRange(EXPLOSION_RANGE);
+    setMaxBombs(MAX_BOMBS);
     setScore(0);
     setGameOver(false);
     setGameWon(false);
@@ -513,7 +519,8 @@ const PracticeGame: React.FC = () => {
       content = gameOver && isStarted ?  "💀" : "🤖";
     } else if (powerUp) {
       cellClass += "bg-cyan-400 animate-pulse";
-      content = "⭐";
+      // Different icons for different power-up types
+      content = powerUp.type === 'explosion_range' ? "⭐" : "💣";
     } else if (enemy) {
       cellClass += "bg-purple-400 animate-pulse";
       content = "👾";
@@ -546,9 +553,10 @@ const PracticeGame: React.FC = () => {
         setIsOpen={setIsOpen}
       />
       
-      {/* Display current explosion range */}
-      <div className="mb-2 text-lg font-bold text-cyan-400">
-        💥 Explosion Range: {explosionRange}
+      {/* Display current stats */}
+      <div className="mb-2 flex gap-4 text-lg font-bold">
+        <span className="text-cyan-400">💥 Explosion Range: {explosionRange}</span>
+        <span className="text-yellow-400">💣 Max Bombs: {maxBombs}</span>
       </div>
 
       {gameOver && !gameWon && (
@@ -630,9 +638,11 @@ const PracticeGame: React.FC = () => {
             </div>
           </div>
           <p>Drop Firework: Space or Enter</p>
-          <p>You can place up to {MAX_BOMBS} fireworks at once!</p>
+          <p>You can place up to {maxBombs} fireworks at once!</p>
           <p>Destroy boxes (📦) to earn points!</p>
-          <p>Collect power-ups (⭐) to increase explosion range!</p>
+          <p>Collect power-ups:</p>
+          <p className="ml-4">⭐ Increase explosion range by 1</p>
+          <p className="ml-4">💣 Increase max bombs by 1</p>
           <p>Avoid explosions (💥) or you'll lose!</p>
         </div>
 
