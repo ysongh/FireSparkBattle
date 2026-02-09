@@ -123,12 +123,15 @@ export const HowToPlayPopup = ({ isOpen, onClose, title } : HowItWorksPopupProps
         </div>
         <p>Drop Firework: Space or Enter</p>
         <p>Destroy boxes (📦) to earn points!</p>
+        <p>Collect power-ups:</p>
+        <p className="ml-4">⭐ Increase explosion range by 1</p>
+        <p className="ml-4">💣 Increase max bombs by 1</p>
         <p>Avoid explosions (💥) or you'll lose!</p>
       </div>
 
       <div className="flex justify-end">
         <button 
-          onClick={onClose}
+          onClick={() => setIsOpen(false)}
           className="px-4 py-2 bg-red-400 hover:bg-red-600 rounded"
         >
           Close
