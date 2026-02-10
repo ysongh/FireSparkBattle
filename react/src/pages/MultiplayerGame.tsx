@@ -12,6 +12,8 @@ interface Player {
   alive: boolean;
   color: string;
   score: number;
+  explosionRange: number;
+  maxBombs: number;
 }
 
 interface Bomb {
@@ -20,6 +22,7 @@ interface Bomb {
   y: number;
   timer: number;
   playerId: string;
+  explosionRange: number;
 }
 
 interface Explosion {
@@ -29,10 +32,18 @@ interface Explosion {
   timer: number;
 }
 
+interface PowerUp {
+  id: string;
+  x: number;
+  y: number;
+  type: 'explosion_range' | 'max_bombs';
+}
+
 interface GameState {
   players: Record<string, Player>;
   bombs: Bomb[];
   explosions: Explosion[];
+  powerUps: PowerUp[];
   destructibleWalls: string[];
   grid?: CellType[][];
   gameStarted: boolean;
@@ -50,6 +61,7 @@ const MultiplayerGame: React.FC = () => {
     players: {},
     bombs: [],
     explosions: [],
+    powerUps: [],
     destructibleWalls: [],
     gameStarted: false,
     gameOver: false
@@ -77,7 +89,7 @@ const MultiplayerGame: React.FC = () => {
 
     newSocket.on('gameState', (state: GameState) => {
       setGameState(state);
-      // FIX: Update gameGrid when grid is included in gameState
+      // Update gameGrid when grid is included in gameState
       if (state.grid) {
         setGameGrid(state.grid);
       }
@@ -170,6 +182,7 @@ const MultiplayerGame: React.FC = () => {
       players: {},
       bombs: [],
       explosions: [],
+      powerUps: [],
       destructibleWalls: [],
       gameStarted: false,
       gameOver: false
@@ -232,6 +245,7 @@ const MultiplayerGame: React.FC = () => {
     const playersAtPos = Object.values(gameState.players).filter(p => p.x === x && p.y === y && p.alive);
     const bomb = gameState.bombs.find(b => b.x === x && b.y === y);
     const explosion = gameState.explosions.find(e => e.x === x && e.y === y);
+    const powerUp = gameState.powerUps.find(p => p.x === x && p.y === y);
     const cellType = gameGrid[y]?.[x];
     
     let cellClass = "w-8 h-8 flex items-center justify-center text-sm font-bold ";
@@ -247,6 +261,9 @@ const MultiplayerGame: React.FC = () => {
       const player = playersAtPos[0];
       cellClass += player.id === playerId ? "bg-blue-400" : "bg-purple-400";
       content = player.color;
+    } else if (powerUp) {
+      cellClass += "bg-cyan-400 animate-pulse";
+      content = powerUp.type === 'explosion_range' ? "⭐" : "💣";
     } else {
       switch (cellType) {
         case 'wall':
@@ -267,6 +284,9 @@ const MultiplayerGame: React.FC = () => {
       </div>
     );
   };
+
+  // Get current player stats
+  const currentPlayer = gameState.players[playerId];
 
   // Name input screen
   if (showNameInput) {
@@ -352,6 +372,14 @@ const MultiplayerGame: React.FC = () => {
           Waiting for more players... (Need at least 2 players)
         </div>
       )}
+
+      {/* Player Stats */}
+      {currentPlayer && gameState.gameStarted && (
+        <div className="mb-2 flex gap-4 text-lg font-bold">
+          <span className="text-cyan-400">💥 Range: {currentPlayer.explosionRange}</span>
+          <span className="text-yellow-400">💣 Max Bombs: {currentPlayer.maxBombs}</span>
+        </div>
+      )}
       
       {/* Player List */}
       <div className="mb-4 flex flex-wrap gap-2 justify-center">
@@ -408,6 +436,9 @@ const MultiplayerGame: React.FC = () => {
           <p>Move: Arrow Keys or WASD</p>
           <p>Drop Bomb: Space or Enter</p>
           <p>Destroy boxes (📦) to earn points!</p>
+          <p>Collect power-ups:</p>
+          <p className="ml-4">⭐ Increase explosion range</p>
+          <p className="ml-4">💣 Increase max bombs</p>
           <p>Eliminate other players to win!</p>
         </div>
       </div>

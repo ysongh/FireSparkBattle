@@ -21,7 +21,8 @@ app.use(express.json());
 const GRID_SIZE = 13;
 const BOMB_TIMER = 3000;
 const EXPLOSION_TIMER = 500;
-const EXPLOSION_RANGE = 2;
+const INITIAL_EXPLOSION_RANGE = 1;
+const INITIAL_MAX_BOMBS = 1;
 const PLAYER_COLORS = ['🔴', '🔵', '🟢', '🟡'];
 const SPAWN_POSITIONS = [
   { x: 1, y: 1 },
@@ -86,8 +87,9 @@ function buildGameStatePayload(room) {
     players: room.gameState.players,
     bombs: room.gameState.bombs,
     explosions: room.gameState.explosions,
+    powerUps: room.gameState.powerUps,
     destructibleWalls: room.gameState.destructibleWalls,
-    grid: room.gameState.grid,  // FIX: Include grid in every gameState emission
+    grid: room.gameState.grid,
     gameStarted: room.gameState.gameStarted,
     gameOver: room.gameState.gameOver,
     winner: room.gameState.winner
@@ -95,12 +97,12 @@ function buildGameStatePayload(room) {
 }
 
 // Create explosion
-function createExplosion(room, bombX, bombY, bombPlayerId) {
+function createExplosion(room, bombX, bombY, bombPlayerId, explosionRange) {
   const explosions = [];
   const directions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
   
   directions.forEach(([dx, dy]) => {
-    for (let i = 0; i <= EXPLOSION_RANGE; i++) {
+    for (let i = 0; i <= explosionRange; i++) {
       const x = bombX + dx * i;
       const y = bombY + dy * i;
       
@@ -114,13 +116,27 @@ function createExplosion(room, bombX, bombY, bombPlayerId) {
         timer: EXPLOSION_TIMER
       });
       
-      // Destroy destructible walls
+      // Destroy destructible walls and potentially drop power-ups
       if (room.gameState.grid[y][x] === 'destructible') {
         room.gameState.grid[y][x] = 'empty';
         const wallIndex = room.gameState.destructibleWalls.indexOf(`${x},${y}`);
         if (wallIndex > -1) {
           room.gameState.destructibleWalls.splice(wallIndex, 1);
         }
+        
+        // 30% chance to drop a power-up
+        if (Math.random() < 0.3) {
+          // 50/50 chance between explosion_range and max_bombs
+          const powerUpType = Math.random() < 0.5 ? 'explosion_range' : 'max_bombs';
+          const powerUp = {
+            id: `powerup_${Date.now()}_${Math.random()}`,
+            x,
+            y,
+            type: powerUpType
+          };
+          room.gameState.powerUps.push(powerUp);
+        }
+        
         break;
       }
     }
@@ -169,7 +185,7 @@ function startGameLoop(roomCode) {
     room.gameState.bombs = room.gameState.bombs.filter(bomb => {
       bomb.timer -= 100;
       if (bomb.timer <= 0) {
-        createExplosion(room, bomb.x, bomb.y, bomb.playerId);
+        createExplosion(room, bomb.x, bomb.y, bomb.playerId, bomb.explosionRange);
         return false;
       }
       return true;
@@ -181,7 +197,7 @@ function startGameLoop(roomCode) {
       return explosion.timer > 0;
     });
     
-    // Broadcast updated game state (now includes grid)
+    // Broadcast updated game state
     io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   }, 100);
 }
@@ -200,6 +216,7 @@ io.on('connection', (socket) => {
         players: {},
         bombs: [],
         explosions: [],
+        powerUps: [],
         grid,
         destructibleWalls,
         gameStarted: false,
@@ -220,7 +237,9 @@ io.on('connection', (socket) => {
       alive: true,
       color: PLAYER_COLORS[0],
       score: 0,
-      bombCount: 0  // Track how many bombs this player has placed
+      bombCount: 0,
+      explosionRange: INITIAL_EXPLOSION_RANGE,
+      maxBombs: INITIAL_MAX_BOMBS
     };
     
     room.players.set(socket.id, player);
@@ -261,7 +280,9 @@ io.on('connection', (socket) => {
       alive: true,
       color: PLAYER_COLORS[playerIndex],
       score: 0,
-      bombCount: 0  // Track how many bombs this player has placed
+      bombCount: 0,
+      explosionRange: INITIAL_EXPLOSION_RANGE,
+      maxBombs: INITIAL_MAX_BOMBS
     };
     
     room.players.set(socket.id, player);
@@ -299,7 +320,9 @@ io.on('connection', (socket) => {
     room.players.forEach((player, playerId) => {
       player.alive = true;
       player.score = 0;
-      player.bombCount = 0;  // Reset bomb count when game starts
+      player.bombCount = 0;
+      player.explosionRange = INITIAL_EXPLOSION_RANGE;
+      player.maxBombs = INITIAL_MAX_BOMBS;
     });
     
     io.to(roomCode).emit('gameState', buildGameStatePayload(room));
@@ -341,6 +364,18 @@ io.on('connection', (socket) => {
     );
     if (otherPlayerAtPos) return;
     
+    // Check for power-up collection
+    const powerUpAtPos = room.gameState.powerUps.find(p => p.x === newX && p.y === newY);
+    if (powerUpAtPos) {
+      if (powerUpAtPos.type === 'explosion_range') {
+        player.explosionRange += 1;
+      } else if (powerUpAtPos.type === 'max_bombs') {
+        player.maxBombs += 1;
+      }
+      // Remove collected power-up
+      room.gameState.powerUps = room.gameState.powerUps.filter(p => p.id !== powerUpAtPos.id);
+    }
+    
     player.x = newX;
     player.y = newY;
     
@@ -357,9 +392,9 @@ io.on('connection', (socket) => {
     const player = room.gameState.players[socket.id];
     if (!player || !player.alive) return;
     
-    // Check if player already has a bomb placed (limit to 1 bomb per player)
-    if (player.bombCount >= 1) {
-      return; // Player can't place more bombs until their current bomb explodes
+    // Check if player has reached their max bomb limit
+    if (player.bombCount >= player.maxBombs) {
+      return;
     }
     
     // Check if bomb already exists at position
@@ -371,11 +406,12 @@ io.on('connection', (socket) => {
       x: player.x,
       y: player.y,
       timer: BOMB_TIMER,
-      playerId: socket.id
+      playerId: socket.id,
+      explosionRange: player.explosionRange
     };
     
     room.gameState.bombs.push(bomb);
-    player.bombCount++; // Increment bomb count for this player
+    player.bombCount++;
     
     io.to(roomCode).emit('gameState', buildGameStatePayload(room));
   });
@@ -392,6 +428,7 @@ io.on('connection', (socket) => {
       players: {},
       bombs: [],
       explosions: [],
+      powerUps: [],
       grid,
       destructibleWalls,
       gameStarted: false,
@@ -406,7 +443,9 @@ io.on('connection', (socket) => {
       player.y = SPAWN_POSITIONS[playerIndex].y;
       player.alive = true;
       player.score = 0;
-      player.bombCount = 0; // Reset bomb count
+      player.bombCount = 0;
+      player.explosionRange = INITIAL_EXPLOSION_RANGE;
+      player.maxBombs = INITIAL_MAX_BOMBS;
       room.gameState.players[playerId] = player;
       playerIndex++;
     });
