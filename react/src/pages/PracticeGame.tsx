@@ -475,27 +475,6 @@ const PracticeGame: React.FC = () => {
     initializeGrid();
   };
 
-  const handleComposeCast = async () => {
-    try {
-      const result = await sdk.actions.composeCast({
-        text: 'Let play FireSpark Battle 🎉',
-        embeds: ["https://firesparkbattle.netlify.app/"],
-        // Optional: parent cast reference
-        // parent: { type: 'cast', hash: '0xabc123...' },
-        // Optional: close the app after composing
-        // close: true,
-      });
-  
-      if (result) {
-        console.log('Cast composed:', result.cast);
-      } else {
-        console.log('Cast composition was closed or canceled.');
-      }
-    } catch (error) {
-      console.error('Error composing cast:', error);
-    }
-  };
-
   // Render cell content
   const renderCell = (x: number, y: number) => {
     const isPlayer = playerPos.x === x && playerPos.y === y;
@@ -551,6 +530,8 @@ const PracticeGame: React.FC = () => {
         score={score}
         numberOfEnemies={enemies.length}
         setIsOpen={setIsOpen}
+        gameOver={gameOver}
+        gameWon={gameWon}
       />
       
       {/* Display current stats */}
@@ -558,15 +539,6 @@ const PracticeGame: React.FC = () => {
         <span className="text-cyan-400">💥 Explosion Range: {explosionRange}</span>
         <span className="text-yellow-400">💣 Max Bombs: {maxBombs}</span>
       </div>
-
-      {gameOver && !gameWon && (
-        <button
-          onClick={handleComposeCast}
-          className="py-2 px-4 mb-2 bg-green-600 text-white font-medium rounded hover:bg-green-700"
-        >
-          Share on Farcaster 🚀
-        </button>
-      )}
       
       <div className="grid grid-cols-13 gap-1 mb-4 border-4 border-gray-600 bg-gray-800">
         {Array.from({ length: GRID_SIZE }, (_, y) =>
