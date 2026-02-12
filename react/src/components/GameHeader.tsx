@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { sdk } from "@farcaster/frame-sdk";
 import { CircleHelp } from "lucide-react";
 
@@ -10,7 +11,17 @@ interface GameHeaderProps {
 }
 
 function GameHeader({ score, numberOfEnemies, setIsOpen, gameOver, gameWon } : GameHeaderProps) {
-   const handleComposeCast = async () => {
+  const [isMiniApp, setIsMiniApp] = useState<Boolean>(false);
+
+  useEffect(() => {
+    const loadSDK = async () => {
+      const newIsMiniApp = await sdk.isInMiniApp();
+      setIsMiniApp(newIsMiniApp);
+    }
+    loadSDK();
+  }, [])
+
+  const handleComposeCast = async () => {
     try {
       const result = await sdk.actions.composeCast({
         text: 'Let play FireSpark Battle 🎉',
@@ -43,7 +54,7 @@ function GameHeader({ score, numberOfEnemies, setIsOpen, gameOver, gameWon } : G
         </button>
       </div>
 
-      {gameOver && !gameWon && (
+      {gameOver && !gameWon && isMiniApp && (
         <button
           onClick={handleComposeCast}
           className="py-2 px-4 mb-2 bg-green-600 text-white font-medium rounded hover:bg-green-700"
